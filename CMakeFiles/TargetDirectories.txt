@@ -1,0 +1,3 @@
+/home/nullptr/Github/tpi-cgi/CMakeFiles/main.dir
+/home/nullptr/Github/tpi-cgi/CMakeFiles/edit_cache.dir
+/home/nullptr/Github/tpi-cgi/CMakeFiles/rebuild_cache.dir

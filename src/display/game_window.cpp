@@ -4,6 +4,10 @@
 
 // Template stuff
 Shader s;
+int timeLocation;
+int resLocation;
+GLuint FBO;
+GLuint u_texture;
 unsigned int VAO;
 unsigned int VBO;
 unsigned int EBO;
@@ -39,12 +43,16 @@ void GameWindow::LoadContent() {
     // Load the template shader
     s = Shader::LoadShader("resources/shaders/testing.vs", "resources/shaders/testing.fs");
 
+    // Obtain the index to import variables into shader file
+    timeLocation = glGetUniformLocation(s.programID, "u_time");
+    resLocation = glGetUniformLocation(s.programID, "u_res");
+
     // Vertices needed for a square
     float vertices[] = {
-    0.5f,  0.5f, 0.0f,  // top right
-    0.5f, -0.5f, 0.0f,  // bottom right
-    -0.5f, -0.5f, 0.0f,  // bottom left
-    -0.5f,  0.5f, 0.0f   // top left 
+    0.5f,  0.5f, 1.0f,  // top right
+    0.5f, -0.5f, 1.0f,  // bottom right
+    -0.5f, -0.5f, 1.0f,  // bottom left
+    -0.5f,  0.5f, 1.0f   // top left 
     };
 
     // Indices for rendering the above square
@@ -52,6 +60,20 @@ void GameWindow::LoadContent() {
         0, 1, 3,   // first triangle
         1, 2, 3    // second triangle
     };
+
+    // Create Frame Buffer object
+    glGenFramebuffers(1, &FBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+    glBindTexture(GL_TEXTURE_2D, u_texture);
+
+
+    // Set the texture parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, u_texture, 0);
 
     // Create Vertex Array object
     glGenVertexArrays(1, &VAO);
@@ -75,13 +97,23 @@ void GameWindow::LoadContent() {
     // Fill with indices!
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 }
-
 void GameWindow::Update() {
+
+    glUseProgram(s.programID);
+    // Set up the uniform variables.
+    float timeValue = static_cast<float>(glfwGetTime());
+    GLfloat vectorValues[2] = { this->windowWidth, this->windowHeight };
+
+    // Update the uniform vars in the shader file.
+    glUniform1f(timeLocation, timeValue);
+    glUniform2fv(resLocation,1,vectorValues);
+
     // Performs hot-reload of shader. Only reloads whenever it has been modified - so not every frame.
     s.ReloadFromFile();
 }
 
 void GameWindow::Render() {
+    glBindFramebuffer(GL_FRAMEBUFFER, FBO);
     // Bind the VAO
     glBindVertexArray(VAO);
 
@@ -94,8 +126,20 @@ void GameWindow::Render() {
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
+
     // Clear the window
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClearColor(0.2f, 0.3f, 0.3f, 0.5f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    // Draw the square
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+    glBindTexture(GL_TEXTURE_2D, u_texture);
+    glUniform1i(glGetUniformLocation(s.programID, "u_texture"), 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+     // Clear the window
+    glClearColor(0.2f, 0.3f, 0.3f, 0.5f);
     glClear(GL_COLOR_BUFFER_BIT);
 
     // Draw the square
