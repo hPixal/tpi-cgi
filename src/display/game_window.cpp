@@ -7,6 +7,7 @@ Shader sDefault;
 Shader sVHS;
 int timeLocation;
 int resLocation;
+int textureLocation;
 unsigned int FBO;
 unsigned int RBO;
 unsigned int u_texture;
@@ -72,11 +73,12 @@ void GameWindow::LoadContent() {
     // Pass the uniforms for sVHS here ...
     
     // Set Uniform.
-	glUniform1i(glGetUniformLocation(sVHS.programID, "screenTexture"), 0);
+	//glUniform1i(glGetUniformLocation(sVHS.programID, "iChannel0"), 0);
 
     // Obtain the index to import variables into shader file.
-    timeLocation = glGetUniformLocation(sVHS.programID, "u_time");
-    resLocation = glGetUniformLocation(sVHS.programID, "u_res");
+    textureLocation = glGetUniformLocation(sVHS.programID, "iChannel0");
+    timeLocation = glGetUniformLocation(sVHS.programID, "iTime");
+    resLocation = glGetUniformLocation(sVHS.programID, "iResolution");
 
     // Vertices needed for a square
     float vertices[] = {
@@ -125,6 +127,7 @@ void GameWindow::LoadContent() {
 
     // Prepare framebuffer rectangle VBO and VAO
 	glGenVertexArrays(1, &rectVAO);
+	glGenVertexArrays(1, &rectVAO);
 	glGenBuffers(1, &rectVBO);
 	glBindVertexArray(rectVAO);
 	glBindBuffer(GL_ARRAY_BUFFER, rectVBO);
@@ -132,8 +135,8 @@ void GameWindow::LoadContent() {
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float))); //revisar
-
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+    
     // Create Vertex Array object
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO); // And bind it
@@ -172,28 +175,26 @@ void GameWindow::Update() {
 }
 
 void GameWindow::Render() {
+    //glEnable(GL_DEPTH_TEST);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+    
+    // Bind the VAO
+    glBindVertexArray(VAO);
+
+    // Make sure we're using the correct shader program.
+    // Must be done per-frame, since the shader program id might change when hot-reloading
+    glUseProgram(sDefault.programID);
 
     // Create new imgui frames
     //ImGui_ImplOpenGL3_NewFrame();
     //ImGui_ImplGlfw_NewFrame();
     //ImGui::NewFrame();
 
-    // Bind the custom framebuffer
-	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-	
-    // Specify the color of the background
-	glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
-	
-    // Clean the back buffer and depth buffer
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
-    // Enable depth testing since it's disabled when drawing the framebuffer rectangle
-	glEnable(GL_DEPTH_TEST);
-    
-    // Make sure we're using the correct shader program.
-    // Must be done per-frame, since the shader program id might change when hot-reloading
-    //glUseProgram(sDefault.programID);
-    sDefault.Activate();
+    // Clear the window
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
 
     // Draw the square
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -204,12 +205,63 @@ void GameWindow::Render() {
     //ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glUseProgram(sVHS.programID);
+    
+    
+    glDisable(GL_DEPTH_TEST); // prevents framebuffer rectangle from being discarded
+    glBindVertexArray(rectVAO);
+    //glUniform1i(textureLocation,u_texture);
+    glBindTexture(GL_TEXTURE_2D, u_texture);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    
+    
+
+    // Swap double buffers and poll OS-events
+    glfwSwapBuffers(this->windowHandle);
+    glfwPollEvents();
+}
+
+/*
+void GameWindow::Render() {
+    sDefault.Activate();
+
+    // Create new imgui frames
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
+    // Bind the custom framebuffer
+	//glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	
+    // Clear the window
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    // Draw the square
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+	
+    // Enable depth testing since it's disabled when drawing the framebuffer rectangle
+	glEnable(GL_DEPTH_TEST);
+    
+    // Make sure we're using the correct shader program.
+    // Must be done per-frame, since the shader program id might change when hot-reloading
+    //glUseProgram(sDefault.programID);
+    //sDefault.Activate();
+
+
+    // Draw imgui
+    ImGui::ShowDemoWindow();
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+    //glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	// Draw the framebuffer rectangle
-	sVHS.Activate();
-	glBindVertexArray(rectVAO);
-	glDisable(GL_DEPTH_TEST); // prevents framebuffer rectangle from being discarded
-	glBindTexture(GL_TEXTURE_2D, u_texture);
-	glDrawArrays(GL_TRIANGLES, 0, 6);
+	//sVHS.Activate();
+	//glBindVertexArray(rectVAO);
+	//glDisable(GL_DEPTH_TEST); // prevents framebuffer rectangle from being discarded
+	//glBindTexture(GL_TEXTURE_2D, u_texture);
+	//glDrawArrays(GL_TRIANGLES, 0, 6);
 
 
     // Clear the window
@@ -219,7 +271,7 @@ void GameWindow::Render() {
     // Swap double buffers and poll OS-events
     glfwSwapBuffers(this->windowHandle);
     glfwPollEvents();
-}
+}*/
 
 void GameWindow::Unload() {
     // Destroy imgui
