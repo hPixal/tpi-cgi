@@ -9,7 +9,7 @@ const float offsetIntensity = 0.02;
 out vec4 fragColor;
 in vec3 fragPosition;
 
-uniform sampler2D u_texture;
+uniform sampler2D screenTexture;
 uniform float u_time;
 uniform vec2 u_res;
 
@@ -49,9 +49,9 @@ void main()
     vec2 offsetR = vec2(0.006 * sin(u_time), 0.0) * colorOffsetIntensity;
     vec2 offsetG = vec2(0.0073 * (cos(u_time * 0.97)), 0.0) * colorOffsetIntensity;
     
-    float r = texture(u_texture, uv + offsetR).r;
-    float g = texture(u_texture, uv + offsetG).g;
-    float b = texture(u_texture, uv).b;
+    float r = texture(screenTexture, uv + offsetR).r;
+    float g = texture(screenTexture, uv + offsetG).g;
+    float b = texture(screenTexture, uv).b;
 
     vec4 tex = vec4(r, g, b, 1.0);
     fragColor = tex;

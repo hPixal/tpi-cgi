@@ -18,6 +18,8 @@ class Shader {
     void Unload();
     void ReloadFromFile();
     static Shader LoadShader(std::string fileVertexShader, std::string fileFragmentShader);
+    void Activate();
+    void Delete();
 
     private:
     static bool CompileShader(unsigned int shaderId, char(&infoLog)[512]);

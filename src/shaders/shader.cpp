@@ -139,3 +139,17 @@ Shader Shader::LoadShader(std::string fileVertexShader, std::string fileFragment
 
     return s;
 }
+
+
+void Shader::Activate()
+{
+    // Activates the Shader Program
+	glUseProgram(this->programID);
+}
+
+
+void Shader::Delete()
+{
+    // Deletes the Shader Program
+	glDeleteProgram(this->programID);
+}
