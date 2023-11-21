@@ -210,7 +210,7 @@ void GameWindow::Render() {
     
     glDisable(GL_DEPTH_TEST); // prevents framebuffer rectangle from being discarded
     glBindVertexArray(rectVAO);
-    //glUniform1i(textureLocation,u_texture);
+    glUniform1i(textureLocation,u_texture);
     glBindTexture(GL_TEXTURE_2D, u_texture);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     

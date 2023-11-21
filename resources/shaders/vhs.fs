@@ -19,7 +19,7 @@ const float offsetIntensity = 0.02;
 const float colorOffsetIntensity = 1.3;
 
 out vec4 FragColor;
-//in vec2 gl_FragCoord;
+in vec3 FragCoord;
 
 float rand(vec2 co)
 {
@@ -38,7 +38,8 @@ float verticalBar(float pos, float uvY, float offset)
 
 void main()
 {
-	vec2 uv = gl_FragCoord.xy / iResolution.xy;
+    
+	vec2 uv = FragCoord.xy / iResolution.xy;
     
     for (float i = 0.0; i < 0.71; i += 0.1313)
     {
